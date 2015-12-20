@@ -71,6 +71,7 @@ Handle<Value> GIArgumentToV8(Isolate *isolate, GITypeInfo *type_info, GIArgument
             return String::NewFromUtf8 (isolate, data);
         }
 
+    case GI_TYPE_TAG_FILENAME:
     case GI_TYPE_TAG_UTF8:
         if (arg->v_pointer)
             return String::NewFromUtf8 (isolate, (char *) arg->v_pointer);
