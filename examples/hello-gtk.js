@@ -9,7 +9,7 @@ var
 GNode.startLoop();
 Gtk.init(null);
 
-console.log(Gtk.Settings.get_default().gtk_enable_accels);
+console.log(Gtk.Settings.getDefault().gtkEnableAccels);
 
 win = new Gtk.Window({
   title: 'node-gtk',
@@ -17,9 +17,9 @@ win = new Gtk.Window({
 });
 
 win.connect('show', Gtk.main);
-win.connect('destroy', Gtk.main_quit);
+win.connect('destroy', Gtk.mainQuit);
 
-win.set_default_size(200, 80);
+win.setDefaultSize(200, 80);
 win.add(new Gtk.Label({label: 'Hello Gtk+'}));
 
-win.show_all();
+win.showAll();
