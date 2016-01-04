@@ -133,7 +133,7 @@ static void SignalConnect(const FunctionCallbackInfo<Value> &args) {
 static Handle<FunctionTemplate> GetBaseClassTemplate(Isolate *isolate) {
     Local<FunctionTemplate> tpl = FunctionTemplate::New (isolate);
     Handle<ObjectTemplate> proto = tpl->PrototypeTemplate ();
-    proto->Set (String::NewFromUtf8 (isolate, "connect"), FunctionTemplate::New (isolate, SignalConnect)->GetFunction ());
+    proto->Set (String::NewFromUtf8 (isolate, "on"), FunctionTemplate::New (isolate, SignalConnect)->GetFunction ());
     return tpl;
 }
 

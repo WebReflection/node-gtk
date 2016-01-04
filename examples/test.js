@@ -17,7 +17,7 @@ Gtk.init(null);
 
 var w = new Gtk.Window();
 var b = new Gtk.Button({ label: "Hi!" });
-b.connect('clicked', function() { console.log("BB"); });
+b.on('clicked', function() { console.log("BB"); });
 w.add(b);
 w.show_all();
 
