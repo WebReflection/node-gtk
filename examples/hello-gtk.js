@@ -3,13 +3,18 @@
 var
   GNode = require('../lib/'),
   Gtk = GNode.importNS('Gtk'),
+  settings,
   win
 ;
 
 GNode.startLoop();
 Gtk.init(null);
 
-console.log(Gtk.Settings.getDefault().gtkEnableAccels);
+settings = Gtk.Settings.get_default(),
+settings.gtk_application_prefer_dark_theme = true;
+settings.gtk_theme_name = "Adwaita";
+
+console.log(settings.gtk_enable_accels);
 
 win = new Gtk.Window({
   title: 'node-gtk',

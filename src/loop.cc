@@ -4,7 +4,12 @@
 #include <glib.h>
 #include <uv.h>
 
-/* Integration for the GLib main loop and UV's main loop */
+/* Integration for the GLib main loop and uv's main loop */
+
+/* The way that this works is that we take uv's loop and nest it inside GLib's
+ * mainloop, since nesting GLib inside uv seems to be fairly impossible until
+ * either uv allows external sources to drive prepare/check, or until GLib
+ * exposes an epoll fd to wait on... */
 
 namespace GNodeJS {
 
@@ -50,8 +55,7 @@ static GSourceFuncs uv_loop_source_funcs = {
     NULL, NULL,
 };
 
-static GSource *uv_loop_source_new (uv_loop_t *loop)
-{
+static GSource *uv_loop_source_new (uv_loop_t *loop) {
     struct uv_loop_source *source = (struct uv_loop_source *) g_source_new (&uv_loop_source_funcs, sizeof (*source));
     source->loop = loop;
     g_source_add_unix_fd (&source->source,

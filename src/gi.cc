@@ -113,7 +113,7 @@ static void MakeClass(const FunctionCallbackInfo<Value> &args) {
 static void ObjectPropertyGetter(const FunctionCallbackInfo<Value> &args) {
     Isolate *isolate = args.GetIsolate ();
     GObject *gobject = GNodeJS::GObjectFromWrapper (args[0]);
-    String::Utf8Value prop_name_v(args[1]->ToString ());
+    String::Utf8Value prop_name_v (args[1]->ToString ());
     const char *prop_name = *prop_name_v;
 
     GParamSpec *pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (gobject), prop_name);
@@ -125,6 +125,20 @@ static void ObjectPropertyGetter(const FunctionCallbackInfo<Value> &args) {
     args.GetReturnValue ().Set (GNodeJS::GValueToV8 (isolate, &value));
 }
 
+static void ObjectPropertySetter(const FunctionCallbackInfo<Value> &args) {
+    GObject *gobject = GNodeJS::GObjectFromWrapper (args[0]);
+    String::Utf8Value prop_name_v (args[1]->ToString ());
+    const char *prop_name = *prop_name_v;
+
+    GParamSpec *pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (gobject), prop_name);
+    GValue value = {};
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
+
+    GNodeJS::V8ToGValue (&value, args[2]);
+
+    g_object_set_property (gobject, prop_name, &value);
+}
+
 static void StartLoop(const FunctionCallbackInfo<Value> &args) {
     GNodeJS::StartLoop ();
 }
@@ -132,11 +146,14 @@ static void StartLoop(const FunctionCallbackInfo<Value> &args) {
 void InitModule(Handle<Object> exports, Handle<Value> module, void *priv) {
     Isolate *isolate = Isolate::GetCurrent ();
 
+    /* XXX: This is an ugly collection of random bits and pieces. We should organize
+     * this functionality a lot better and clean it up. */
     exports->Set (String::NewFromUtf8 (isolate, "Bootstrap"), FunctionTemplate::New (isolate, Bootstrap)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "GetConstantValue"), FunctionTemplate::New (isolate, GetConstantValue)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "MakeFunction"), FunctionTemplate::New (isolate, MakeFunction)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "MakeClass"), FunctionTemplate::New (isolate, MakeClass)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "ObjectPropertyGetter"), FunctionTemplate::New (isolate, ObjectPropertyGetter)->GetFunction ());
+    exports->Set (String::NewFromUtf8 (isolate, "ObjectPropertySetter"), FunctionTemplate::New (isolate, ObjectPropertySetter)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "StartLoop"), FunctionTemplate::New (isolate, StartLoop)->GetFunction ());
 }
 
