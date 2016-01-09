@@ -10,11 +10,11 @@ var
 GNode.startLoop();
 Gtk.init(null);
 
-settings = Gtk.Settings.get_default(),
-settings.gtk_application_prefer_dark_theme = true;
-settings.gtk_theme_name = "Adwaita";
+settings = Gtk.Settings.getDefault(),
+settings.gtkApplicationPreferDarkTheme = true;
+settings.gtkThemeName = "Adwaita";
 
-console.log(settings.gtk_enable_accels);
+console.log(settings.gtkEnableAccels);
 
 win = new Gtk.Window({
   title: 'node-gtk',
