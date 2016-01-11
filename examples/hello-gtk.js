@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
 var
-  GNode = require('../lib/'),
-  Gtk = GNode.importNS('Gtk'),
+  Gtk = require('../lib/')('Gtk'),
   settings,
   win
 ;
 
-GNode.startLoop();
 Gtk.init(null);
 
 settings = Gtk.Settings.get_default(),
