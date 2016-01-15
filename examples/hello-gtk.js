@@ -18,7 +18,7 @@ console.log(settings.gtkEnableAccels);
 
 win = new Gtk.Window({
   title: 'node-gtk',
-  window_position: Gtk.WindowPosition.CENTER
+  windowPosition: Gtk.WindowPosition.CENTER
 });
 
 win.connect('show', Gtk.main);
