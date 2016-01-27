@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 var
-  GNode = require('../lib/'),
-  Gtk = GNode.withCamelCase('Gtk'),
-  settings,
-  win
+    GNode = require('../lib/'),
+    Gtk = GNode.withCamelCase('Gtk'),
+    settings,
+    win
 ;
 
 GNode.startLoop();
@@ -17,9 +17,10 @@ settings.gtkThemeName = "Adwaita";
 console.log(settings.gtkEnableAccels);
 
 win = new Gtk.Window({
-  title: 'node-gtk'
-  // __init__ not implemented yet
-  // , window_position: Gtk.WindowPosition.CENTER
+    title: 'node-gtk',
+    // __init__ not implemented yet
+    // so the following cannot be windowPosition yet
+    window_position: Gtk.WindowPosition.CENTER
 });
 
 win.connect('show', Gtk.main);

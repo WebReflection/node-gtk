@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 var
-  GNode = require('../lib/'),
-  Gtk = GNode.importNS('Gtk'),
-  settings,
-  win
+    GNode = require('../lib/'),
+    Gtk = GNode.importNS('Gtk'),
+    settings,
+    win
 ;
 
 GNode.startLoop();
@@ -17,8 +17,8 @@ settings.gtk_theme_name = "Adwaita";
 console.log(settings.gtk_enable_accels);
 
 win = new Gtk.Window({
-  title: 'node-gtk',
-  window_position: Gtk.WindowPosition.CENTER
+    title: 'node-gtk',
+    window_position: Gtk.WindowPosition.CENTER
 });
 
 win.connect('show', Gtk.main);
