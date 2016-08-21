@@ -11,8 +11,8 @@ namespace GNodeJS {
 
 static bool InitGParameterFromProperty(GParameter    *parameter,
                                        void          *klass,
-                                       Handle<String> name,
-                                       Handle<Value>  value) {
+                                       Local<String> name,
+                                       Local<Value>  value) {
     String::Utf8Value name_str (name);
     GParamSpec *pspec = g_object_class_find_property (G_OBJECT_CLASS (klass), *name_str);
     if (pspec == NULL)
@@ -27,7 +27,7 @@ static bool InitGParameterFromProperty(GParameter    *parameter,
 static bool InitGParametersFromProperty(GParameter    **parameters_p,
                                         int            *n_parameters_p,
                                         void           *klass,
-                                        Handle<Object>  property_hash) {
+                                        Local<Object>  property_hash) {
     Local<Array> properties = property_hash->GetOwnPropertyNames ();
     int n_parameters = properties->Length ();
     GParameter *parameters = g_new0 (GParameter, n_parameters);
@@ -49,7 +49,7 @@ static void ToggleNotify(gpointer user_data, GObject *gobject, gboolean toggle_d
 
 static G_DEFINE_QUARK(gnode_js_object, gnode_js_object);
 
-static void AssociateGObject(Isolate *isolate, Handle<Object> object, GObject *gobject) {
+static void AssociateGObject(Isolate *isolate, Local<Object> object, GObject *gobject) {
     object->SetAlignedPointerInInternalField (0, gobject);
 
     g_object_ref_sink (gobject);
@@ -74,7 +74,7 @@ static void GObjectConstructor(const FunctionCallbackInfo<Value> &args) {
         return;
     }
 
-    Handle<Object> self = args.This ();
+    Local<Object> self = args.This ();
 
     if (args[0]->IsExternal ()) {
         /* The External case. This is how WrapperFromGObject is called. */
@@ -119,7 +119,7 @@ static void SignalConnectInternal(const FunctionCallbackInfo<Value> &args, bool 
     GObject *gobject = GObjectFromWrapper (args.This ());
 
     String::Utf8Value signal_name (args[0]->ToString ());
-    Handle<Function> callback = Local<Function>::Cast (args[1]->ToObject ());
+    Local<Function> callback = Local<Function>::Cast (args[1]->ToObject ());
     GClosure *gclosure = MakeClosure (isolate, callback);
 
     ulong handler_id = g_signal_connect_closure (gobject, *signal_name, gclosure, after);
@@ -130,14 +130,14 @@ static void SignalConnect(const FunctionCallbackInfo<Value> &args) {
     SignalConnectInternal (args, false);
 }
 
-static Handle<FunctionTemplate> GetBaseClassTemplate(Isolate *isolate) {
+static Local<FunctionTemplate> GetBaseClassTemplate(Isolate *isolate) {
     Local<FunctionTemplate> tpl = FunctionTemplate::New (isolate);
-    Handle<ObjectTemplate> proto = tpl->PrototypeTemplate ();
+    Local<ObjectTemplate> proto = tpl->PrototypeTemplate ();
     proto->Set (String::NewFromUtf8 (isolate, "connect"), FunctionTemplate::New (isolate, SignalConnect)->GetFunction ());
     return tpl;
 }
 
-static Handle<FunctionTemplate> GetClassTemplateFromGI(Isolate *isolate, GIBaseInfo *info);
+static Local<FunctionTemplate> GetClassTemplateFromGI(Isolate *isolate, GIBaseInfo *info);
 
 static void ClassDestroyed(const WeakCallbackData<FunctionTemplate, GIBaseInfo> &data) {
     GIBaseInfo *info = data.GetParameter ();
@@ -152,15 +152,15 @@ static void ClassDestroyed(const WeakCallbackData<FunctionTemplate, GIBaseInfo> 
     g_base_info_unref (info);
 }
 
-static Handle<FunctionTemplate> GetClassTemplate(Isolate *isolate, GIBaseInfo *info, GType gtype) {
+static Local<FunctionTemplate> GetClassTemplate(Isolate *isolate, GIBaseInfo *info, GType gtype) {
     void *data = g_type_get_qdata (gtype, gnode_js_template_quark ());
 
     if (data) {
         Persistent<FunctionTemplate> *persistent = (Persistent<FunctionTemplate> *) data;
-        Handle<FunctionTemplate> tpl = Handle<FunctionTemplate>::New (isolate, *persistent);
+        Local<FunctionTemplate> tpl = Local<FunctionTemplate>::New (isolate, *persistent);
         return tpl;
     } else {
-        Handle<FunctionTemplate> tpl = FunctionTemplate::New (isolate, GObjectConstructor, External::New (isolate, info));
+        Local<FunctionTemplate> tpl = FunctionTemplate::New (isolate, GObjectConstructor, External::New (isolate, info));
 
         Persistent<FunctionTemplate> *persistent = new Persistent<FunctionTemplate>(isolate, tpl);
         persistent->SetWeak (g_base_info_ref (info), ClassDestroyed);
@@ -173,7 +173,7 @@ static Handle<FunctionTemplate> GetClassTemplate(Isolate *isolate, GIBaseInfo *i
 
         GIObjectInfo *parent_info = g_object_info_get_parent (info);
         if (parent_info) {
-            Handle<FunctionTemplate> parent_tpl = GetClassTemplateFromGI (isolate, (GIBaseInfo *) parent_info);
+            Local<FunctionTemplate> parent_tpl = GetClassTemplateFromGI (isolate, (GIBaseInfo *) parent_info);
             tpl->Inherit (parent_tpl);
         } else {
             tpl->Inherit (GetBaseClassTemplate (isolate));
@@ -183,19 +183,19 @@ static Handle<FunctionTemplate> GetClassTemplate(Isolate *isolate, GIBaseInfo *i
     }
 }
 
-static Handle<FunctionTemplate> GetClassTemplateFromGI(Isolate *isolate, GIBaseInfo *info) {
+static Local<FunctionTemplate> GetClassTemplateFromGI(Isolate *isolate, GIBaseInfo *info) {
     GType gtype = g_registered_type_info_get_g_type ((GIRegisteredTypeInfo *) info);
     return GetClassTemplate (isolate, info, gtype);
 }
 
-static Handle<FunctionTemplate> GetClassTemplateFromGType(Isolate *isolate, GType gtype) {
+static Local<FunctionTemplate> GetClassTemplateFromGType(Isolate *isolate, GType gtype) {
     GIRepository *repo = g_irepository_get_default ();
     GIBaseInfo *info = g_irepository_find_by_gtype (repo, gtype);
     return GetClassTemplate (isolate, info, gtype);
 }
 
-Handle<Function> MakeClass(Isolate *isolate, GIBaseInfo *info) {
-    Handle<FunctionTemplate> tpl = GetClassTemplateFromGI (isolate, info);
+Local<Function> MakeClass(Isolate *isolate, GIBaseInfo *info) {
+    Local<FunctionTemplate> tpl = GetClassTemplateFromGI (isolate, info);
     return tpl->GetFunction ();
 }
 
@@ -231,29 +231,29 @@ static void ToggleNotify(gpointer user_data, GObject *gobject, gboolean toggle_d
     }
 }
 
-Handle<Value> WrapperFromGObject(Isolate *isolate, GObject *gobject) {
+Local<Value> WrapperFromGObject(Isolate *isolate, GObject *gobject) {
     void *data = g_object_get_qdata (gobject, gnode_js_object_quark ());
 
     if (data) {
         /* Easy case: we already have an object. */
         Persistent<Object> *persistent = (Persistent<Object> *) data;
-        Handle<Object> obj = Handle<Object>::New (isolate, *persistent);
+        Local<Object> obj = Local<Object>::New (isolate, *persistent);
         return obj;
     } else {
         GType gtype = G_OBJECT_TYPE (gobject);
 
-        Handle<FunctionTemplate> tpl = GetClassTemplateFromGType (isolate, gtype);
-        Handle<Function> constructor = tpl->GetFunction ();
+        Local<FunctionTemplate> tpl = GetClassTemplateFromGType (isolate, gtype);
+        Local<Function> constructor = tpl->GetFunction ();
 
-        Handle<Value> gobject_external = External::New (isolate, gobject);
-        Handle<Value> args[] = { gobject_external };
-        Handle<Object> obj = constructor->NewInstance (1, args);
+        Local<Value> gobject_external = External::New (isolate, gobject);
+        Local<Value> args[] = { gobject_external };
+        Local<Object> obj = constructor->NewInstance (1, args);
         return obj;
     }
 }
 
-GObject * GObjectFromWrapper(Handle<Value> value) {
-    Handle<Object> object = value->ToObject ();
+GObject * GObjectFromWrapper(Local<Value> value) {
+    Local<Object> object = value->ToObject ();
     void *data = object->GetAlignedPointerFromInternalField (0);
     GObject *gobject = G_OBJECT (data);
     return gobject;

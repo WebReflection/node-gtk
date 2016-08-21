@@ -6,6 +6,6 @@
 
 namespace GNodeJS {
 
-GClosure *MakeClosure(v8::Isolate *isolate, v8::Handle<v8::Function> function);
+GClosure *MakeClosure(v8::Isolate *isolate, v8::Local<v8::Function> function);
 
 };

@@ -12,18 +12,18 @@
 
 using namespace v8;
 
-static void DefineFunction(Isolate *isolate, Handle<Object> module_obj, GIBaseInfo *info) {
+static void DefineFunction(Isolate *isolate, Local<Object> module_obj, GIBaseInfo *info) {
     const char *function_name = g_base_info_get_name ((GIBaseInfo *) info);
     module_obj->Set (String::NewFromUtf8 (isolate, function_name), GNodeJS::MakeFunction (isolate, info));
 }
 
-static void DefineFunction(Isolate *isolate, Handle<Object> module_obj, GIBaseInfo *info, const char *base_name) {
+static void DefineFunction(Isolate *isolate, Local<Object> module_obj, GIBaseInfo *info, const char *base_name) {
     char *function_name = g_strdup_printf ("%s_%s", base_name, g_base_info_get_name ((GIBaseInfo *) info));
     module_obj->Set (String::NewFromUtf8 (isolate, function_name), GNodeJS::MakeFunction (isolate, info));
     g_free (function_name);
 }
 
-static void DefineObjectFunctions(Isolate *isolate, Handle<Object> module_obj, GIBaseInfo *info) {
+static void DefineObjectFunctions(Isolate *isolate, Local<Object> module_obj, GIBaseInfo *info) {
     const char *object_name = g_base_info_get_name ((GIBaseInfo *) info);
 
     int n_methods = g_object_info_get_n_methods (info);
@@ -34,7 +34,7 @@ static void DefineObjectFunctions(Isolate *isolate, Handle<Object> module_obj, G
     }
 }
 
-static void DefineBoxedFunctions(Isolate *isolate, Handle<Object> module_obj, GIBaseInfo *info) {
+static void DefineBoxedFunctions(Isolate *isolate, Local<Object> module_obj, GIBaseInfo *info) {
     const char *object_name = g_base_info_get_name ((GIBaseInfo *) info);
 
     int n_methods = g_struct_info_get_n_methods (info);
@@ -45,7 +45,7 @@ static void DefineBoxedFunctions(Isolate *isolate, Handle<Object> module_obj, GI
     }
 }
 
-static void DefineBootstrapInfo(Isolate *isolate, Handle<Object> module_obj, GIBaseInfo *info) {
+static void DefineBootstrapInfo(Isolate *isolate, Local<Object> module_obj, GIBaseInfo *info) {
     GIInfoType type = g_base_info_get_type (info);
 
     switch (type) {
@@ -143,7 +143,7 @@ static void StartLoop(const FunctionCallbackInfo<Value> &args) {
     GNodeJS::StartLoop ();
 }
 
-void InitModule(Handle<Object> exports, Handle<Value> module, void *priv) {
+void InitModule(Local<Object> exports, Local<Value> module, void *priv) {
     Isolate *isolate = Isolate::GetCurrent ();
 
     /* XXX: This is an ugly collection of random bits and pieces. We should organize

@@ -94,7 +94,7 @@ Local<Value> WrapperFromBoxed(Isolate *isolate, GIBaseInfo *info, void *data) {
 }
 
 void * BoxedFromWrapper(Local<Value> value) {
-    Handle<Object> object = value->ToObject ();
+    Local<Object> object = value->ToObject ();
     void *data = object->GetAlignedPointerFromInternalField (0);
     return data;
 }

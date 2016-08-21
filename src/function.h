@@ -7,6 +7,6 @@
 
 namespace GNodeJS {
 
-v8::Handle<v8::Function> MakeFunction(v8::Isolate *isolate, GIBaseInfo *base_info);
+v8::Local<v8::Function> MakeFunction(v8::Isolate *isolate, GIBaseInfo *base_info);
 
 };

@@ -7,7 +7,7 @@ using namespace v8;
 
 namespace GNodeJS {
 
-Handle<Value> GIArgumentToV8(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg) {
+Local<Value> GIArgumentToV8(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg) {
     GITypeTag type_tag = g_type_info_get_tag (type_info);
 
     switch (type_tag) {
@@ -82,7 +82,7 @@ Handle<Value> GIArgumentToV8(Isolate *isolate, GITypeInfo *type_info, GIArgument
     }
 }
 
-static GArray * V8ToGArray(Isolate *isolate, GITypeInfo *type_info, Handle<Value> value) {
+static GArray * V8ToGArray(Isolate *isolate, GITypeInfo *type_info, Local<Value> value) {
     if (!value->IsArray ()) {
         isolate->ThrowException (Exception::TypeError (String::NewFromUtf8 (isolate, "Not an array.")));
         return NULL;
@@ -105,7 +105,7 @@ static GArray * V8ToGArray(Isolate *isolate, GITypeInfo *type_info, Handle<Value
     return garray;
 }
 
-void V8ToGIArgument(Isolate *isolate, GIBaseInfo *base_info, GIArgument *arg, Handle<Value> value) {
+void V8ToGIArgument(Isolate *isolate, GIBaseInfo *base_info, GIArgument *arg, Local<Value> value) {
     GIInfoType type = g_base_info_get_type (base_info);
 
     switch (type) {
@@ -125,7 +125,7 @@ void V8ToGIArgument(Isolate *isolate, GIBaseInfo *base_info, GIArgument *arg, Ha
     }
 }
 
-void V8ToGIArgument(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg, Handle<Value> value, bool may_be_null) {
+void V8ToGIArgument(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg, Local<Value> value, bool may_be_null) {
     GITypeTag type_tag = g_type_info_get_tag (type_info);
 
     if (value->IsNull ()) {
@@ -245,7 +245,7 @@ void FreeGIArgument(GITypeInfo *type_info, GIArgument *arg) {
     }
 }
 
-void V8ToGValue(GValue *gvalue, Handle<Value> value) {
+void V8ToGValue(GValue *gvalue, Local<Value> value) {
     if (G_VALUE_HOLDS_BOOLEAN (gvalue)) {
         g_value_set_boolean (gvalue, value->BooleanValue ());
     } else if (G_VALUE_HOLDS_INT (gvalue)) {
@@ -269,7 +269,7 @@ void V8ToGValue(GValue *gvalue, Handle<Value> value) {
     }
 }
 
-Handle<Value> GValueToV8(Isolate *isolate, const GValue *gvalue) {
+Local<Value> GValueToV8(Isolate *isolate, const GValue *gvalue) {
     if (G_VALUE_HOLDS_BOOLEAN (gvalue)) {
         if (g_value_get_boolean (gvalue))
             return True (isolate);

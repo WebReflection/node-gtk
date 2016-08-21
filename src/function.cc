@@ -179,7 +179,7 @@ static void FunctionDestroyed(const WeakCallbackData<FunctionTemplate, FunctionI
     g_free (func);
 }
 
-Handle<Function> MakeFunction(Isolate *isolate, GIBaseInfo *info) {
+Local<Function> MakeFunction(Isolate *isolate, GIBaseInfo *info) {
     FunctionInfo *func = g_new0 (FunctionInfo, 1);
     func->info = g_base_info_ref (info);
 
@@ -205,7 +205,7 @@ class TrampolineInfo {
     GICallableInfo *info;
     GIScopeType scope_type;
 
-    TrampolineInfo(Handle<Function>  function,
+    TrampolineInfo(Local<Function>  function,
                    GICallableInfo   *info,
                    GIScopeType       scope_type);
 
@@ -227,7 +227,7 @@ void TrampolineInfo::Call(ffi_cif *cif,
     TrampolineInfo *trampoline = (TrampolineInfo *) data;
 
     int argc = g_callable_info_get_n_args (trampoline->info);
-    Handle<Value> argv[argc];
+    Local<Value> argv[argc];
 
     for (int i = 0; i < argc; i++) {
         GIArgInfo arg_info;
@@ -237,18 +237,18 @@ void TrampolineInfo::Call(ffi_cif *cif,
         argv[i] = GIArgumentToV8 (&type_info, (GIArgument *) &args[i]);
     }
 
-    Handle<Function> func = trampoline->func;
+    Local<Function> func = trampoline->func;
     /* Provide a bogus "this" function. Any interested callers should
      * bind their callbacks to what they're intersted in... */
-    Handle<Object> this_obj = func;
-    Handle<Value> return_value = func->Call (this_obj, argc, argv);
+    Local<Object> this_obj = func;
+    Local<Value> return_value = func->Call (this_obj, argc, argv);
     GITypeInfo type_info;
     g_callable_info_load_return_type (trampoline->info, &type_info);
     V8ToGIArgument (&type_info, (GIArgument *) &result, return_value,
                     g_callable_info_may_return_null (trampoline->info));
 }
 
-TrampolineInfo::TrampolineInfo(Handle<Function>  function,
+TrampolineInfo::TrampolineInfo(Local<Function>   function,
                                GICallableInfo   *info,
                                GIScopeType       scope_type) {
     this->closure = g_callable_info_prepare_closure (info, &cif, Call, this);
