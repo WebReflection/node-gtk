@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include "value.h"
 #include "boxed.h"
 #include "gobject.h"
@@ -125,7 +127,8 @@ void V8ToGIArgument(Isolate *isolate, GIBaseInfo *base_info, GIArgument *arg, Lo
     }
 }
 
-void V8ToGIArgument(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg, Local<Value> value, bool may_be_null) {
+void V8ToGIArgument(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg, Local<Value> value,
+                    bool may_be_null, size_t *length_p) {
     GITypeTag type_tag = g_type_info_get_tag (type_info);
 
     if (value->IsNull ()) {
@@ -172,7 +175,7 @@ void V8ToGIArgument(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg, Lo
         {
             String::Utf8Value str (value);
             const char *utf8_data = *str;
-            arg->v_pointer = g_filename_from_utf8 (utf8_data, -1, NULL, NULL, NULL);
+            arg->v_pointer = g_filename_from_utf8 (utf8_data, -1, NULL, length_p, NULL);
         }
         break;
 
@@ -181,6 +184,8 @@ void V8ToGIArgument(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg, Lo
             String::Utf8Value str (value);
             const char *data = *str;
             arg->v_pointer = g_strdup (data);
+            if (length_p)
+                *length_p = strlen (data);
         }
         break;
 
@@ -196,6 +201,9 @@ void V8ToGIArgument(Isolate *isolate, GITypeInfo *type_info, GIArgument *arg, Lo
         {
             GIArrayType array_type = g_type_info_get_array_type (type_info);
             GArray *garray = V8ToGArray (isolate, type_info, value);
+
+            if (length_p)
+                *length_p = garray->len;
 
             switch (array_type) {
             case GI_ARRAY_TYPE_C:

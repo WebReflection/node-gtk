@@ -20,24 +20,6 @@ struct Parameter {
     } type;
 };
 
-static void FillArgument(Isolate *isolate, GIArgInfo *arg_info, GIArgument *argument, Local<Value> value) {
-    bool may_be_null = g_arg_info_may_be_null (arg_info);
-    GITypeInfo type_info;
-    g_arg_info_load_type (arg_info, &type_info);
-    V8ToGIArgument (isolate, &type_info, argument, value, may_be_null);
-}
-
-static int GetArrayLength(Local<Value> value) {
-    /* XXX: We should get this from the V8ToGIArgument code. */
-    if (value->IsNull ())
-        return 0;
-
-    assert (value->IsArray ());
-    Local<Array> array = Local<Array>::Cast (value->ToObject ());
-    int length = array->Length ();
-    return length;
-}
-
 static void FunctionInvoker(const FunctionCallbackInfo<Value> &args) {
     Isolate *isolate = args.GetIsolate();
     FunctionInfo *func = (FunctionInfo *) External::Cast (*args.Data ())->Value ();
@@ -119,19 +101,29 @@ static void FunctionInvoker(const FunctionCallbackInfo<Value> &args) {
                 callable_arg_values[i].v_pointer = NULL;
             }
         } else {
-            FillArgument (isolate, &arg_info, &callable_arg_values[i], args[in_arg]);
-
             if (call_parameters[i].type == Parameter::ARRAY) {
                 GITypeInfo type_info;
                 g_arg_info_load_type (&arg_info, &type_info);
+                bool may_be_null = g_arg_info_may_be_null (&arg_info);
+                size_t array_length;
+                V8ToGIArgument (isolate, &type_info, &callable_arg_values[i], args[in_arg], may_be_null, &array_length);
+
+                Local<Value> array_length_value = Integer::New (isolate, array_length);
 
                 int array_length_pos = g_type_info_get_array_length (&type_info);
                 GIArgInfo array_length_arg;
                 g_callable_info_load_arg ((GICallableInfo *) info, array_length_pos, &array_length_arg);
 
-                int array_length = GetArrayLength (args[in_arg]);
-                Local<Value> array_length_value = Integer::New (isolate, array_length);
-                FillArgument (isolate, &array_length_arg, &callable_arg_values[array_length_pos], array_length_value);
+                {
+                    GITypeInfo type_info;
+                    g_arg_info_load_type (&array_length_arg, &type_info);
+                    V8ToGIArgument (isolate, &type_info, &callable_arg_values[array_length_pos], array_length_value, false);
+                }
+            } else {
+                GITypeInfo type_info;
+                g_arg_info_load_type (&arg_info, &type_info);
+                bool may_be_null = g_arg_info_may_be_null (&arg_info);
+                V8ToGIArgument (isolate, &type_info, &callable_arg_values[i], args[in_arg], may_be_null);
             }
 
             in_arg++;
