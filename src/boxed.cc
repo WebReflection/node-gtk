@@ -50,8 +50,7 @@ static void BoxedConstructor(const FunctionCallbackInfo<Value> &args) {
     }
 }
 
-static Local<FunctionTemplate> GetBoxedTemplate(Isolate *isolate, GIBaseInfo *info, GType type) {
-    GType gtype = g_registered_type_info_get_g_type ((GIRegisteredTypeInfo *) info);
+static Local<FunctionTemplate> GetBoxedTemplate(Isolate *isolate, GIBaseInfo *info, GType gtype) {
     void *data = g_type_get_qdata (gtype, gnode_js_template_quark ());
 
     if (data) {
