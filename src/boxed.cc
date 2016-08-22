@@ -51,7 +51,12 @@ static void BoxedConstructor(const FunctionCallbackInfo<Value> &args) {
 }
 
 static Local<FunctionTemplate> GetBoxedTemplate(Isolate *isolate, GIBaseInfo *info, GType gtype) {
-    void *data = g_type_get_qdata (gtype, gnode_js_template_quark ());
+    void *data;
+
+    if (gtype == G_TYPE_NONE)
+        data = NULL;
+    else
+        data = g_type_get_qdata (gtype, gnode_js_template_quark ());
 
     if (data) {
         Persistent<FunctionTemplate> *persistent = (Persistent<FunctionTemplate> *) data;
@@ -62,12 +67,14 @@ static Local<FunctionTemplate> GetBoxedTemplate(Isolate *isolate, GIBaseInfo *in
 
         Persistent<FunctionTemplate> *persistent = new Persistent<FunctionTemplate>(isolate, tpl);
         persistent->SetWeak (g_base_info_ref (info), BoxedClassDestroyed);
-        g_type_set_qdata (gtype, gnode_js_template_quark (), persistent);
 
         const char *class_name = g_base_info_get_name (info);
         tpl->SetClassName (String::NewFromUtf8 (isolate, class_name));
 
         tpl->InstanceTemplate ()->SetInternalFieldCount (1);
+
+        if (gtype != G_TYPE_NONE)
+            g_type_set_qdata (gtype, gnode_js_template_quark (), persistent);
 
         return tpl;
     }
@@ -78,7 +85,7 @@ static Local<FunctionTemplate> GetBoxedTemplateFromGI(Isolate *isolate, GIBaseIn
     return GetBoxedTemplate (isolate, info, gtype);
 }
 
-static Local<Function> MakeBoxed(Isolate *isolate, GIBaseInfo *info) {
+Local<Function> MakeBoxed(Isolate *isolate, GIBaseInfo *info) {
     Local<FunctionTemplate> tpl = GetBoxedTemplateFromGI (isolate, info);
     return tpl->GetFunction ();
 }

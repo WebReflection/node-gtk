@@ -21,4 +21,6 @@ b.connect('clicked', function() { console.log("BB"); });
 w.add(b);
 w.show_all();
 
+console.log(GLib.MainLoop);
+
 Gtk.main();

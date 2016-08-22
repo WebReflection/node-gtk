@@ -110,6 +110,12 @@ static void MakeClass(const FunctionCallbackInfo<Value> &args) {
     args.GetReturnValue ().Set (GNodeJS::MakeClass (isolate, info));
 }
 
+static void MakeBoxed(const FunctionCallbackInfo<Value> &args) {
+    Isolate *isolate = args.GetIsolate ();
+    GIBaseInfo *info = (GIBaseInfo *) GNodeJS::BoxedFromWrapper (args[0]);
+    args.GetReturnValue ().Set (GNodeJS::MakeBoxed (isolate, info));
+}
+
 static void ObjectPropertyGetter(const FunctionCallbackInfo<Value> &args) {
     Isolate *isolate = args.GetIsolate ();
     GObject *gobject = GNodeJS::GObjectFromWrapper (args[0]);
@@ -139,6 +145,34 @@ static void ObjectPropertySetter(const FunctionCallbackInfo<Value> &args) {
     g_object_set_property (gobject, prop_name, &value);
 }
 
+static void BoxedFieldGetter(const FunctionCallbackInfo<Value> &args) {
+    Isolate *isolate = args.GetIsolate ();
+    void *boxed = GNodeJS::BoxedFromWrapper (args[0]);
+    GIFieldInfo *field_info = (GIFieldInfo *) GNodeJS::BoxedFromWrapper (args[1]);
+    GIArgument argument;
+    GITypeInfo *type_info = g_field_info_get_type (field_info);
+    if (!g_field_info_get_field (field_info, boxed, &argument)) {
+        isolate->ThrowException (Exception::Error (String::NewFromUtf8 (isolate, "Could not get boxed field")));
+        goto out;
+    }
+    args.GetReturnValue ().Set (GNodeJS::GIArgumentToV8 (isolate, type_info, &argument));
+
+ out:
+    g_base_info_unref (type_info);
+}
+
+static void BoxedFieldSetter(const FunctionCallbackInfo<Value> &args) {
+    Isolate *isolate = args.GetIsolate ();
+    void *boxed = GNodeJS::BoxedFromWrapper (args[0]);
+    GIFieldInfo *field_info = (GIFieldInfo *) GNodeJS::BoxedFromWrapper (args[1]);
+    GIArgument argument;
+    GITypeInfo *type_info = g_field_info_get_type (field_info);
+    GNodeJS::V8ToGIArgument (isolate, type_info, &argument, args[2], true);
+    if (!g_field_info_set_field (field_info, boxed, &argument))
+        isolate->ThrowException (Exception::Error (String::NewFromUtf8 (isolate, "Could not set boxed field")));
+    g_base_info_unref (type_info);
+}
+
 static void StartLoop(const FunctionCallbackInfo<Value> &args) {
     GNodeJS::StartLoop ();
 }
@@ -151,9 +185,15 @@ void InitModule(Local<Object> exports, Local<Value> module, void *priv) {
     exports->Set (String::NewFromUtf8 (isolate, "Bootstrap"), FunctionTemplate::New (isolate, Bootstrap)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "GetConstantValue"), FunctionTemplate::New (isolate, GetConstantValue)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "MakeFunction"), FunctionTemplate::New (isolate, MakeFunction)->GetFunction ());
+
     exports->Set (String::NewFromUtf8 (isolate, "MakeClass"), FunctionTemplate::New (isolate, MakeClass)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "ObjectPropertyGetter"), FunctionTemplate::New (isolate, ObjectPropertyGetter)->GetFunction ());
     exports->Set (String::NewFromUtf8 (isolate, "ObjectPropertySetter"), FunctionTemplate::New (isolate, ObjectPropertySetter)->GetFunction ());
+
+    exports->Set (String::NewFromUtf8 (isolate, "MakeBoxed"), FunctionTemplate::New (isolate, MakeBoxed)->GetFunction ());
+    exports->Set (String::NewFromUtf8 (isolate, "BoxedFieldGetter"), FunctionTemplate::New (isolate, BoxedFieldGetter)->GetFunction ());
+    exports->Set (String::NewFromUtf8 (isolate, "BoxedFieldSetter"), FunctionTemplate::New (isolate, BoxedFieldSetter)->GetFunction ());
+
     exports->Set (String::NewFromUtf8 (isolate, "StartLoop"), FunctionTemplate::New (isolate, StartLoop)->GetFunction ());
 }
 
