@@ -3,7 +3,7 @@ GNOME Gtk+ bindings for NodeJS
 
 
 ### What is this
-A work in progress to bring Gtk+ usable directly from nodejs so that the environemnt would be more udated and supported than the one available via [GJS](https://wiki.gnome.org/action/show/Projects/Gjs).
+A work in progress to bring Gtk+ usable directly from nodejs so that the environment would be more up-to-date and supported than the one available via [GJS](https://wiki.gnome.org/action/show/Projects/Gjs).
 
 Please note this project is currently in an _alpha_ state and it needs more contributors.
 
