@@ -1,3 +1,6 @@
+# Abandoned
+This project is abandoned, it not even a work in progress anymore :-(
+
 # node-gtk
 GNOME Gtk+ bindings for NodeJS
 
