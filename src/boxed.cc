@@ -12,7 +12,7 @@ struct Boxed {
 
 static G_DEFINE_QUARK(gnode_js_template, gnode_js_template);
 
-static void BoxedClassDestroyed(const WeakCallbackData<FunctionTemplate, GIBaseInfo> &data) {
+static void BoxedClassDestroyed(const WeakCallbackInfo<GIBaseInfo> &data) {
     GIBaseInfo *info = data.GetParameter ();
     GType gtype = g_registered_type_info_get_g_type ((GIRegisteredTypeInfo *) info);
 
@@ -66,7 +66,7 @@ static Local<FunctionTemplate> GetBoxedTemplate(Isolate *isolate, GIBaseInfo *in
         Local<FunctionTemplate> tpl = FunctionTemplate::New (isolate, BoxedConstructor, External::New (isolate, info));
 
         Persistent<FunctionTemplate> *persistent = new Persistent<FunctionTemplate>(isolate, tpl);
-        persistent->SetWeak (g_base_info_ref (info), BoxedClassDestroyed);
+        persistent->SetWeak (g_base_info_ref (info), BoxedClassDestroyed, v8::WeakCallbackType::kParameter);
 
         const char *class_name = g_base_info_get_name (info);
         tpl->SetClassName (String::NewFromUtf8 (isolate, class_name));
@@ -94,8 +94,14 @@ Local<Value> WrapperFromBoxed(Isolate *isolate, GIBaseInfo *info, void *data) {
     Local<Function> constructor = MakeBoxed (isolate, info);
 
     Local<Value> boxed_external = External::New (isolate, data);
+    Local<Context> context = Context::New (isolate);
     Local<Value> args[] = { boxed_external };
-    Local<Object> obj = constructor->NewInstance (1, args);
+    Local<Object> obj;
+    MaybeLocal<Object> mobj = constructor->NewInstance (context, 1, args);
+    bool checkme = mobj.ToLocal(&obj);
+
+    if (!checkme) { /* TODO: check this boolean value and do something */ }
+
     return obj;
 }
 
